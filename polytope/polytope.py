@@ -1541,14 +1541,14 @@ def extreme(poly1):
     return poly1.vertices
 
 
-def qhull(vertices, abs_tol=ABS_TOL):
+def qhull(vertices, s0=[], abs_tol=ABS_TOL):
     """Use quickhull to compute a convex hull.
 
     @param vertices: A N x d array containing N vertices in dimension d
 
     @return: L{Polytope} describing the convex hull
     """
-    A, b, vert = quickhull(vertices, abs_tol=abs_tol)
+    A, b, vert = quickhull(vertices,  s0, abs_tol=abs_tol)
     if A.size == 0:
         return Polytope()
     return Polytope(A, b, minrep=True, vertices=vert)

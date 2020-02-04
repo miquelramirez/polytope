@@ -142,7 +142,7 @@ def is_neighbor(fac1, fac2, abs_tol=1e-7):
     return (same == dim - 1)
 
 
-def quickhull(POINTS, abs_tol=1e-7):
+def quickhull(POINTS, s0=[], abs_tol=1e-7):
     """Compute the convex hull of a set of points.
 
     @param POINTS: a n*d np array where each row denotes a point
@@ -157,6 +157,7 @@ def quickhull(POINTS, abs_tol=1e-7):
     npt = sh[0]
     if npt <= dim:
         # Convex hull is empty
+        print('Empty convex hull')
         return np.array([]), np.array([]), None
     # Check if convex hull is fully dimensional
     u, s, v = np.linalg.svd(np.transpose(POINTS - POINTS[0, :]))
@@ -168,38 +169,57 @@ def quickhull(POINTS, abs_tol=1e-7):
         return np.array([]), np.array([]), None
     # Choose starting simplex by choosing maximum
     # points in random directions
-    rank = 0
-    while rank < dim:
-        ind = []
-        d = 0
-        while d < dim + 1:
-            rand = np.random.rand(dim) - 0.5
-            test = np.dot(POINTS, rand)
-            index = np.argsort(test)
-            i = 0
-            b = index[i] in ind
-            while b:
-                i += 1
+
+    if len(s0) == 0:
+
+        rank = 0
+        while rank < dim:
+            ind = []
+            d = 0
+            while d < dim + 1:
+                rand = np.random.rand(dim) - 0.5
+                test = np.dot(POINTS, rand)
+                index = np.argsort(test)
+                i = 0
                 b = index[i] in ind
-            ind.append(index[i])
-            d += 1
-        startsimplex = POINTS[ind, :]
-        u, s, v = np.linalg.svd(
-            np.transpose(startsimplex - startsimplex[0, :]))
-        rank = np.sum(s > 1e-10)
-    unassigned_points = POINTS[np.setdiff1d(range(npt), ind), :]
+                while b:
+                    i += 1
+                    b = index[i] in ind
+                ind.append(index[i])
+                d += 1
+            startsimplex = POINTS[ind, :]
+            u, s, v = np.linalg.svd(
+                np.transpose(startsimplex - startsimplex[0, :]))
+            rank = np.sum(s > 1e-10)
+        unassigned_points = POINTS[np.setdiff1d(range(npt), ind), :]
+    else:
+        startsimplex = POINTS[s0, :]
+        unassigned_points = POINTS[np.setdiff1d(range(npt), s0), :]
+
+    print('1. SIMPLEX SELECTION')
+    print('Simplex:', startsimplex)
+    print('Unassigned points:', unassigned_points)
+
     # Center starting simplex around origin by translation
     xc = np.zeros(dim)
     for ii in range(dim + 1):
         xc += startsimplex[ii, :] / (dim + 1)
+
+    print('Centroid:', xc)
+
     startsimplex = startsimplex - xc
     unassigned_points = unassigned_points - xc
     Forg = []
     F = []
     R = []
+
+    print('2. INITIAL SET OF FACETS')
     for i in range(dim + 1):
         ind = np.setdiff1d(np.arange(dim + 1), [i])
         fac = Facet(startsimplex[ind, :])
+        print("New facet, vertices:", fac.vertices)
+        print("normal:", fac.normal)
+        print("distance:", fac.distance)
         Forg.append(fac)
     if npt == dim + 1:
         # If only d+1 facets, we already have convex hull
@@ -225,6 +245,7 @@ def quickhull(POINTS, abs_tol=1e-7):
             ind = np.setdiff1d(np.arange(dim + 1), [ii, jj])
             fac1.neighbors.append(fac2)
             fac2.neighbors.append(fac1)
+    print("3. ASSIGNING POINTS TO FACETS")
     for fac1 in Forg:
         # Assign outside points to facets
         npt = np.shape(unassigned_points)[0]
@@ -247,6 +268,12 @@ def quickhull(POINTS, abs_tol=1e-7):
         else:
             unassigned_points = None
             break
+    print("\t Facets with unassigned points")
+    for f in F:
+        print("vertices(f)=", f.vertices)
+        print("outside(f)=")
+        for k, op in enumerate(f.outside):
+            print("{}.".format(k), op.coordinates, op.distance)
     # We now have a collection F of facets with outer points!
     # Selecting the point furthest away from a facet
     while len(F) > 0:
