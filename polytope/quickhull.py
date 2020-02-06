@@ -141,6 +141,22 @@ def is_neighbor(fac1, fac2, abs_tol=1e-7):
                 break
     return (same == dim - 1)
 
+def select_simplex(POINTS):
+    dim = POINTS.shape[1]
+    ind = []
+    d = 0
+    while d < dim + 1:
+        npt, rand = np.random.rand(dim) - 0.5
+        test = np.dot(POINTS, rand)
+        index = np.argsort(test)
+        i = 0
+        b = index[i] in ind
+        while b:
+            i += 1
+            b = index[i] in ind
+        ind.append(index[i])
+        d += 1
+    return POINTS[ind, :], POINTS[np.setdiff1d(range(npt), ind), :]
 
 def quickhull(POINTS, s0=[], abs_tol=1e-7):
     """Compute the convex hull of a set of points.
@@ -155,6 +171,8 @@ def quickhull(POINTS, s0=[], abs_tol=1e-7):
     sh = np.shape(POINTS)
     dim = sh[1]
     npt = sh[0]
+    startsimplex = None
+    unassigned_points = None
     if npt <= dim:
         # Convex hull is empty
         print('Empty convex hull')
@@ -163,9 +181,9 @@ def quickhull(POINTS, s0=[], abs_tol=1e-7):
     u, s, v = np.linalg.svd(np.transpose(POINTS - POINTS[0, :]))
     rank = np.sum(s > 1e-15)
     if rank < dim:
-        print(
-            "Warning: convex hull is not fully dimensional, "
-            "returning empty polytope")
+        #print(
+        #    "Warning: convex hull is not fully dimensional, "
+        #    "returning empty polytope")
         return np.array([]), np.array([]), None
     # Choose starting simplex by choosing maximum
     # points in random directions
