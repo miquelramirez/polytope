@@ -141,12 +141,13 @@ def is_neighbor(fac1, fac2, abs_tol=1e-7):
                 break
     return (same == dim - 1)
 
-def select_simplex(POINTS):
-    dim = POINTS.shape[1]
+def select_simplex(POINTS, dim):
+    npt, _ = POINTS.shape
     ind = []
     d = 0
-    while d < dim + 1:
-        npt, rand = np.random.rand(dim) - 0.5
+    while d < dim:
+        rand = np.random.rand(npt) - 0.5
+        print(POINTS, rand)
         test = np.dot(POINTS, rand)
         index = np.argsort(test)
         i = 0
@@ -157,6 +158,21 @@ def select_simplex(POINTS):
         ind.append(index[i])
         d += 1
     return POINTS[ind, :], POINTS[np.setdiff1d(range(npt), ind), :]
+
+def handle_empty_case(POINTS):
+    npt, dim = POINTS.shape
+    s0, unassigned = select_simplex(POINTS, 3) # triangle
+    Forg = []
+    for i in range(3):
+        ind = np.setdiff1d(np.arange(3), [i])
+        fac = Facet(s0[ind, :])
+        print("New facet, vertices:", fac.vertices)
+        print("normal:", fac.normal)
+        print("distance:", fac.distance)
+        Forg.append(fac)
+    print(Forg)
+
+
 
 def quickhull(POINTS, s0=[], abs_tol=1e-7):
     """Compute the convex hull of a set of points.
@@ -176,7 +192,8 @@ def quickhull(POINTS, s0=[], abs_tol=1e-7):
     if npt <= dim:
         # Convex hull is empty
         print('Empty convex hull')
-        return np.array([]), np.array([]), None
+        return handle_empty_case(POINTS)
+        #return np.array([]), np.array([]), None
     # Check if convex hull is fully dimensional
     u, s, v = np.linalg.svd(np.transpose(POINTS - POINTS[0, :]))
     rank = np.sum(s > 1e-15)
