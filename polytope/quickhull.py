@@ -76,6 +76,8 @@ class Facet(object):
         c = np.zeros(sh[1] + 1)
         c[-1] = -1.
         A = np.vstack([A0, c])
+        print(A)
+        print(b)
         sol = np.linalg.solve(A, b)
 
         xx = sol[0:sh[1]]
