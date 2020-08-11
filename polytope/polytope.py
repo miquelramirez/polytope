@@ -59,9 +59,6 @@ To change this choice, see the module `polytope.solvers`.
 
 The structure of this module is based on \cite{MPT04}.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import logging
 import warnings
 

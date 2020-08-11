@@ -37,12 +37,9 @@ Reference
 \cite{Barber96toms}
 """
 # Created by P. Nilsson, 8/2/11
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import numpy as np
 
+debug = False
 
 class Facet(object):
     """Face of dimension n-1 of n-dimensional polyhedron.
@@ -76,8 +73,9 @@ class Facet(object):
         c = np.zeros(sh[1] + 1)
         c[-1] = -1.
         A = np.vstack([A0, c])
-        print(A)
-        print(b)
+        if debug:
+            print(A)
+            print(b)
         sol = np.linalg.solve(A, b)
 
         xx = sol[0:sh[1]]
@@ -149,7 +147,8 @@ def select_simplex(POINTS, dim):
     d = 0
     while d < dim:
         rand = np.random.rand(npt) - 0.5
-        print(POINTS, rand)
+        if debug:
+            print(POINTS, rand)
         test = np.dot(POINTS, rand)
         index = np.argsort(test)
         i = 0
@@ -168,11 +167,13 @@ def handle_empty_case(POINTS):
     for i in range(3):
         ind = np.setdiff1d(np.arange(3), [i])
         fac = Facet(s0[ind, :])
-        print("New facet, vertices:", fac.vertices)
-        print("normal:", fac.normal)
-        print("distance:", fac.distance)
+        if debug:
+            print("New facet, vertices:", fac.vertices)
+            print("normal:", fac.normal)
+            print("distance:", fac.distance)
         Forg.append(fac)
-    print(Forg)
+    if debug:
+        print(Forg)
 
 
 
@@ -233,16 +234,18 @@ def quickhull(POINTS, s0=[], abs_tol=1e-7):
         startsimplex = POINTS[s0, :]
         unassigned_points = POINTS[np.setdiff1d(range(npt), s0), :]
 
-    print('1. SIMPLEX SELECTION')
-    print('Simplex:', startsimplex)
-    print('Unassigned points:', unassigned_points)
+    if debug:
+        print('1. SIMPLEX SELECTION')
+        print('Simplex:', startsimplex)
+        print('Unassigned points:', unassigned_points)
 
     # Center starting simplex around origin by translation
     xc = np.zeros(dim)
     for ii in range(dim + 1):
         xc += startsimplex[ii, :] / (dim + 1)
 
-    print('Centroid:', xc)
+    if debug:
+        print('Centroid:', xc)
 
     startsimplex = startsimplex - xc
     unassigned_points = unassigned_points - xc
@@ -250,13 +253,15 @@ def quickhull(POINTS, s0=[], abs_tol=1e-7):
     F = []
     R = []
 
-    print('2. INITIAL SET OF FACETS')
+    if debug:
+        print('2. INITIAL SET OF FACETS')
     for i in range(dim + 1):
         ind = np.setdiff1d(np.arange(dim + 1), [i])
         fac = Facet(startsimplex[ind, :])
-        print("New facet, vertices:", fac.vertices)
-        print("normal:", fac.normal)
-        print("distance:", fac.distance)
+        if debug:
+            print("New facet, vertices:", fac.vertices)
+            print("normal:", fac.normal)
+            print("distance:", fac.distance)
         Forg.append(fac)
     if npt == dim + 1:
         # If only d+1 facets, we already have convex hull
@@ -282,7 +287,8 @@ def quickhull(POINTS, s0=[], abs_tol=1e-7):
             ind = np.setdiff1d(np.arange(dim + 1), [ii, jj])
             fac1.neighbors.append(fac2)
             fac2.neighbors.append(fac1)
-    print("3. ASSIGNING POINTS TO FACETS")
+    if debug:
+        print("3. ASSIGNING POINTS TO FACETS")
     for fac1 in Forg:
         # Assign outside points to facets
         npt = np.shape(unassigned_points)[0]
@@ -305,12 +311,13 @@ def quickhull(POINTS, s0=[], abs_tol=1e-7):
         else:
             unassigned_points = None
             break
-    print("\t Facets with unassigned points")
-    for f in F:
-        print("vertices(f)=", f.vertices)
-        print("outside(f)=")
-        for k, op in enumerate(f.outside):
-            print("{}.".format(k), op.coordinates, op.distance)
+    if debug:
+        print("\t Facets with unassigned points")
+        for f in F:
+            print("vertices(f)=", f.vertices)
+            print("outside(f)=")
+            for k, op in enumerate(f.outside):
+                print("{}.".format(k), op.coordinates, op.distance)
     # We now have a collection F of facets with outer points!
     # Selecting the point furthest away from a facet
     while len(F) > 0:
