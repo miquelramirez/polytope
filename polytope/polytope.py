@@ -226,6 +226,14 @@ class Polytope(object):
 
     __nonzero__ = __bool__
 
+    @property
+    def num_facets(self):
+        return self.A.shape[0]
+
+    @property
+    def dimension(self):
+        return self.A.shape[1]
+
     def union(self, other, check_convex=False):
         """Return union with Polytope or Region.
 
