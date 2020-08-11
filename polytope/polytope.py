@@ -972,12 +972,18 @@ def is_convex(reg, abs_tol=ABS_TOL):
 
 
 def is_inside(polyreg, point, abs_tol=ABS_TOL):
-    """Return `point in polyreg`."""
+    """Return `point in polyreg`.
+
+    @type point: `collections.abc.Sequence` or `numpy.ndarray`
+    @rtype: bool
+    """
     warnings.warn(
         'Write `point in polyreg` instead of '
         'calling this function.',
         DeprecationWarning)
-    return polyreg.__contains__(point, abs_tol)
+    if not isinstance(point, np.ndarray):
+        point = np.array(point)
+    return polyreg.contains(point[:, np.newaxis], abs_tol)[0]
 
 
 def is_subset(small, big, abs_tol=ABS_TOL):
@@ -1941,7 +1947,8 @@ def projection_iterhull(poly1, new_dim, max_iter=1000,
             logger.debug("Checking if new points are inside convex hull")
             OK = 1
             for i in xrange(np.shape(Vert)[0]):
-                if not P1.contains([Vert[i, new_dim]], abs_tol=1e-5):
+                if not P1.contains(np.transpose([Vert[i, new_dim]]),
+                                   abs_tol=1e-5):
                     # If all new points are inside
                     # old polytope -> Finished
                     OK = 0
